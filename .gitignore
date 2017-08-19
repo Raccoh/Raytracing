@@ -1,0 +1,6 @@
+# General file endings to be ignored
+*Main
+*Test
+*.o
+*.swp
+*.ppm
