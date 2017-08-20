@@ -28,8 +28,8 @@ struct color4i {
     r = r_; g = g_; b = b_; a = a_;
   }
   color4i(double r_, double g_, double b_, double a_ = 255) {
-    color4i((int)(r_ * 255 + 0.5), (int)(g_ * 255 + 0.5),
-            (int)(b_ * 255 + 0.5), (int)(a_ * 255 + 0.5));
+    *this = color4i((int)(r_ * 255 + 0.5), (int)(g_ * 255 + 0.5),
+                    (int)(b_ * 255 + 0.5), (int)(a_ * 255 + 0.5));
   }
   color4i operator+(const color4i& c) const {
     return color4i(r+c.r, g+c.g, b+c.b, a+c.a);

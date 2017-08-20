@@ -21,7 +21,7 @@ int main()
   color4i* pixels = new color4i[w * h];
   for (int row = 0; row < h; ++row) {
     for (int col = 0; col < w; ++col) {
-      pixels[row * w + col] = color4i(0, 0, 255);
+      pixels[row * w + col] = color4i(0.0, 0.0, 1.0);
     }
   }
   writeImage(pixels, w, h);
