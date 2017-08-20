@@ -15,7 +15,7 @@ Sphere spheres[] = {
 };
 int numSpheres = sizeof(spheres) / sizeof(Sphere);
 
-vec3d plp(50, 80, 40.8);     // point light position
+vec3d plp(50, 80, 81.6);     // point light position
 color4i plc(1.0, 1.0, 1.0);  // point light color
 
 color4i radiance(const Sphere& s, const Ray& r) {
