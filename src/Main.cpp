@@ -52,7 +52,6 @@ vec3d uniformSampleHemisphere(float r1, float r2)
 }
 
 color4i radiance(const Ray& r, int depth = 0, Sphere* s = nullptr) {
-  if (depth > maxDepth) return color4i();
   int closestId = -1;
   double closestT = Infty;
   for (int i = 0; i < numSpheres; ++i) {
@@ -75,6 +74,7 @@ color4i radiance(const Ray& r, int depth = 0, Sphere* s = nullptr) {
     return ambient + (spheres[lightId].color * s->color * std::abs(r.d.dot(hitNorm)) * 0.95);
   }
   ++depth;
+  if (depth > maxDepth) return ambient;
   vec3d Nt, Nb;
   createCoordinateSystem(hitNorm, &Nt, &Nb);
   int resultR = 0; int resultG = 0; int resultB = 0;
