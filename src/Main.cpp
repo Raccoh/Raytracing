@@ -5,7 +5,7 @@
 #include "HelperFunctions.h"
 
 Sphere spheres[] = {
-  Sphere(1e5, vec3d(-1e5-1,40.8,81.6),  color4i(),
+  Sphere(1e5, vec3d(-1e5+1,40.8,81.6),  color4i(),
          color4i(.75,.25,.25), DIFF),                       // Left
   Sphere(1e5, vec3d( 1e5+99,40.8,81.6), color4i(),
          color4i(.25,.25,.75), DIFF),                       // Right
@@ -89,7 +89,7 @@ color4i radiance(const Ray& r, int depth = 0, Sphere* s = nullptr) {
         sample.x * Nt.z + sample.y * hitNorm.z + sample.z * Nb.z);
     sampleWorld = sampleWorld.norm();
     color4i result = radiance(Ray(hitPos + sampleWorld * 0.1, sampleWorld), depth, &spheres[closestId]);
-    resultR += result.r * 9; resultG += result.g * 9; resultB += result.b * 9;
+    resultR += result.r * 15; resultG += result.g * 15; resultB += result.b * 15;
   }
   resultR = (double)resultR / numSamples;
   resultG = (double)resultG / numSamples;
@@ -99,8 +99,8 @@ color4i radiance(const Ray& r, int depth = 0, Sphere* s = nullptr) {
 
 int main(int argc, char* argv[])
 {
-  // Render the smallpt scene with simple Monte Carlo Path Tracing (1 bounce,
-  // should correspond to direct lighting with soft shadows).
+  // Render the smallpt scene with simple Monte Carlo path tracing (1 bounce,
+  // corresponds to direct lighting with soft shadows).
   // Coordinates taken from smallpt.
   int w = 1024, h = 768;
   if (numSamples == 1 && argc == 2) numSamples = atoi(argv[1]);
