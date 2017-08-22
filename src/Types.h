@@ -21,7 +21,7 @@ struct vec3d {
   double lengthSquared() { double l = length(); return l * l; }
   vec3d& norm() { return *this = *this * (1 / length()); }
   double dot(const vec3d& b) const { return x*b.x+y*b.y+z*b.z; }
-  vec3d cross(const vec3d& b) {
+  vec3d cross(const vec3d& b) const {
     return vec3d(y*b.z-z*b.y,z*b.x-x*b.z,x*b.y-y*b.x);
   }
 };
@@ -57,5 +57,6 @@ struct color4i {
 };
 
 struct Ray { vec3d o, d; Ray(vec3d o_, vec3d d_) : o(o_), d(d_) {} };
+enum Refl_t { DIFF, SPEC, REFR };  // material types
 
 #endif

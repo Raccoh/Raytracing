@@ -1,9 +1,11 @@
 #include "Types.h"
 
 struct Sphere {
-  double rad; vec3d pos; color4i color;
-  Sphere(double rad_, vec3d pos_, color4i color_)
-      : rad(rad_), pos(pos_), color(color_) {}
+  double rad; vec3d pos; color4i emission, color; Refl_t refl_t;
+  Sphere(double rad_, vec3d pos_, color4i emission_, color4i color_,
+         Refl_t refl_t_)
+      : rad(rad_), pos(pos_), emission(emission_), color(color_),
+        refl_t(refl_t_) {}
   double intersect(const Ray& r) const {
     double b = r.d.dot(r.o - pos) * 2;
     double c = (r.o - pos).lengthSquared() - (rad * rad);
