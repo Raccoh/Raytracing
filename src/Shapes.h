@@ -1,8 +1,8 @@
 #include "Types.h"
 
 struct Sphere {
-  double rad; vec3d pos; color4i emission, color; Refl_t refl_t;
-  Sphere(double rad_, vec3d pos_, color4i emission_, color4i color_,
+  double rad; vec3d pos; vec3d emission, color; Refl_t refl_t;
+  Sphere(double rad_, vec3d pos_, vec3d emission_, vec3d color_,
          Refl_t refl_t_)
       : rad(rad_), pos(pos_), emission(emission_), color(color_),
         refl_t(refl_t_) {}
