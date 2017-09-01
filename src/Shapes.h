@@ -2,10 +2,12 @@
 
 struct Sphere {
   double rad; vec3d pos; vec3d emission, color; Refl_t refl_t;
+
   Sphere(double rad_, vec3d pos_, vec3d emission_, vec3d color_,
          Refl_t refl_t_)
       : rad(rad_), pos(pos_), emission(emission_), color(color_),
         refl_t(refl_t_) {}
+
   double intersect(const Ray& r) const {
     double b = r.d.dot(r.o - pos) * 2;
     double c = (r.o - pos).lengthSquared() - (rad * rad);

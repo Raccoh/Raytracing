@@ -7,12 +7,11 @@
 #define FEps 1e-6
 #define Infty 1e20
 
+// 3-dimensional vector with double-precision
 struct vec3d {
   double x = 0, y = 0, z = 0;
   vec3d() {}
-  vec3d(double x_, double y_, double z_) {
-    x = x_; y = y_; z = z_;
-  }
+  vec3d(double x_, double y_, double z_) { x = x_; y = y_; z = z_; }
   vec3d operator+(const vec3d& b) const { return vec3d(x+b.x,y+b.y,z+b.z); }
   vec3d operator-(const vec3d& b) const { return vec3d(x-b.x,y-b.y,z-b.z); }
   vec3d operator*(double b) const { return vec3d(x*b,y*b,z*b); }
@@ -26,7 +25,10 @@ struct vec3d {
   }
 };
 
+// Ray with (o)rigin and (d)irection
 struct Ray { vec3d o, d; Ray(vec3d o_, vec3d d_) : o(o_), d(d_) {} };
-enum Refl_t { DIFF, SPEC, REFR };  // material types
+
+// Material types
+enum Refl_t { DIFF, SPEC };
 
 #endif
