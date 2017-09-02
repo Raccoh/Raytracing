@@ -49,19 +49,19 @@ void createCoordinateSystem(const vec3d& N, vec3d* Nt, vec3d* Nb)
   *Nb = N.cross(*Nt);
 }
 
-vec3d uniformSampleHemisphere(const vec3d& hitNorm)
+// Return a sample of a cosine-weighted hemisphere by generating uniform points
+// on a disk, and then projecting them up to the hemisphere (and transform with hitNorm)
+vec3d cosineSampleHemisphere(const vec3d& hitNorm)
 {
-  vec3d Nt, Nb;
-  createCoordinateSystem(hitNorm, &Nt, &Nb);
   double r1 = distribution(generator);
   double r2 = distribution(generator);
-  // we define r1 = cos(theta) = y for the new random sample
-  // cos^2(theta) + sin^2(theta) = 1 -> sin(theta) = sqrt(1 - cos^2(theta))
-  double sinTheta = sqrt(1 - r1 * r1);
+  double r1s = sqrt(r1);
   double phi = 2 * M_PI * r2;
-  double x = sinTheta * cos(phi);
-  double z = sinTheta * sin(phi);
-  vec3d sample = vec3d(x, r1, z).norm();
+  double x = r1s * cos(phi);
+  double z = r1s * sin(phi);
+  vec3d sample = vec3d(x, sqrt(1.0 - r1), z).norm();
+  vec3d Nt, Nb;
+  createCoordinateSystem(hitNorm, &Nt, &Nb);
   vec3d sampleWorld(
       sample.x * Nt.x + sample.y * hitNorm.x + sample.z * Nb.x,
       sample.x * Nt.y + sample.y * hitNorm.y + sample.z * Nb.y,
@@ -83,11 +83,14 @@ vec3d radiance(const Ray& r, int depth) {
   // Handle diffuse surfaces
   if (hitObj.refl_t == DIFF) {
     // Trace one new random sample ray in the hemisphere at hitPos
-    vec3d sample = uniformSampleHemisphere(hitNorm);
+    vec3d sample = cosineSampleHemisphere(hitNorm);
     vec3d result = hitObj.emission + (hitObj.color *
                    radiance(Ray(hitPos + (sample * 0.1), sample), depth));
-    // Apply Lambert's Cosine Law
-    return result * hitNorm.dot(sample);
+    // Our PDF is now cos(theta)/pi with the cosine-weighted hemisphere.
+    // Dividing by that cancels out Lambert's Cosine Law and we just need to
+    // multiply all samples by pi. Including the energy conservation constraint
+    // 1/pi cancels out that pi as well, so there's nothing left to do here.
+    return result;
   }
   // Handle specular surfaces, let the ray bounce off the surface perfectly
   vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
@@ -115,13 +118,15 @@ vec3d radiance(const Ray& r) {
   // Handle diffuse surfaces, sample the complete hemisphere at hitPos
   vec3d result;
   for (int i = 0; i < numSamplesPerPixel; ++i) {
-    vec3d sample = uniformSampleHemisphere(hitNorm);
+    vec3d sample = cosineSampleHemisphere(hitNorm);
     result = result + hitObj.emission + (hitObj.color *
              radiance(Ray(hitPos + (sample * 0.1), sample), 1));
   }
-  // Divide by number of samples and our PDF 1/(2*pi), i.e. multiply by 2*pi
-  result = result * (1.0 / numSamplesPerPixel) * 2 * M_PI;
-  return result;
+  // Only divide by number of samples. Dividing by our PDF cos(theta)/pi
+  // canceled out Lambert's Cosine Law earlier and left us with multiplying all
+  // samples by pi. Including the energy conservation constraint 1/pi canceled
+  // out that pi as well so there's only this operation left to do.
+  return result * (1.0 / numSamplesPerPixel);
 }
 
 int main(int argc, char* argv[])
