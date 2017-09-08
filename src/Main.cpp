@@ -25,7 +25,7 @@ Sphere spheres[] = {
 int numSpheres = sizeof(spheres) / sizeof(Sphere);
 
 int numSamplesPerPixel = 4;  // if 4, try to read it from command line argument
-int maxDepth = 5;
+int minDepth = 5;
 double reflRayOffset = 0.01; // add a bias to refl. rays to avoid false self illumination
 
 std::default_random_engine generator;
@@ -80,12 +80,23 @@ vec3d radiance(const Ray& r, int depth) {
   if (hitPos.y > 81.7) return vec3d();  // irrelevant hit above the room
   const Sphere& hitObj = spheres[closestId];
   vec3d hitNorm = (hitPos - hitObj.pos).norm();
-  if (++depth > maxDepth) return hitObj.emission;  // max number of bounces exceeded
+  vec3d reflCol = hitObj.color;
+  // If min number of bounces exceeded, apply Russian Roulette to be
+  // (mathematically) unbiased in the path termination
+  if (++depth > minDepth) {
+    // Randomly terminate a path with a probability inversely equal to the max reflection
+    double p = std::max(reflCol.x, std::max(reflCol.y, reflCol.z));
+    if (distribution(generator) > p)
+      return hitObj.emission;
+    else
+      // Add the energy we 'lose' by randomly terminating paths
+      reflCol  = reflCol * (1 / p);
+  }
   // Handle diffuse surfaces
   if (hitObj.refl_t == DIFF) {
     // Trace one new random sample ray in the hemisphere at hitPos
     vec3d sample = cosineSampleHemisphere(hitNorm);
-    vec3d result = hitObj.emission + (hitObj.color *
+    vec3d result = hitObj.emission + (reflCol *
                    radiance(Ray(hitPos + (sample * reflRayOffset), sample), depth));
     // Our PDF is now cos(theta)/pi with the cosine-weighted hemisphere.
     // Dividing by that cancels out Lambert's Cosine Law and we just need to
@@ -95,7 +106,7 @@ vec3d radiance(const Ray& r, int depth) {
   }
   // Handle specular surfaces, let the ray bounce off the surface perfectly
   vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
-  return hitObj.emission + (hitObj.color *
+  return hitObj.emission + (reflCol *
          radiance(Ray(hitPos + (reflectedDir * reflRayOffset), reflectedDir), depth));
 }
 
