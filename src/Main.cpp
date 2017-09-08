@@ -26,6 +26,7 @@ int numSpheres = sizeof(spheres) / sizeof(Sphere);
 
 int numSamplesPerPixel = 4;  // if 4, try to read it from command line argument
 int minDepth = 5;
+
 double reflRayOffset = 0.01; // add a bias to refl. rays to avoid false self illumination
 
 std::default_random_engine generator;
@@ -50,8 +51,8 @@ void createCoordinateSystem(const vec3d& N, vec3d* Nt, vec3d* Nb)
   *Nb = N.cross(*Nt);
 }
 
-// Return a sample of a cosine-weighted hemisphere by generating uniform points
-// on a disk, and then projecting them up to the hemisphere (and transform with hitNorm)
+// Return a sample of the cosine-weighted hemisphere at hitNorm by generating a
+// uniformly sampled point on a disk and then projecting it up to the hemisphere
 vec3d cosineSampleHemisphere(const vec3d& hitNorm)
 {
   double r1 = distribution(generator);
@@ -70,8 +71,8 @@ vec3d cosineSampleHemisphere(const vec3d& hitNorm)
   return sampleWorld.norm();
 }
 
-// Compute transmitted radiance of follow-up rays (depth > 0)
-vec3d radiance(const Ray& r, int depth) {
+// Compute transmitted radiance of given ray
+vec3d radiance(const Ray& r, int depth = 0) {
   int closestId = -1;
   double closestT = Infty;
   findIntersection(r, &closestId, &closestT);
@@ -98,7 +99,7 @@ vec3d radiance(const Ray& r, int depth) {
     vec3d sample = cosineSampleHemisphere(hitNorm);
     vec3d result = hitObj.emission + (reflCol *
                    radiance(Ray(hitPos + (sample * reflRayOffset), sample), depth));
-    // Our PDF is now cos(theta)/pi with the cosine-weighted hemisphere.
+    // Our PDF is cos(theta)/pi with the cosine-weighted hemisphere.
     // Dividing by that cancels out Lambert's Cosine Law and we just need to
     // multiply all samples by pi. Including the energy conservation constraint
     // 1/pi cancels out that pi as well, so there's nothing left to do here.
@@ -108,37 +109,6 @@ vec3d radiance(const Ray& r, int depth) {
   vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
   return hitObj.emission + (reflCol *
          radiance(Ray(hitPos + (reflectedDir * reflRayOffset), reflectedDir), depth));
-}
-
-// Compute transmitted radiance of initial rays (depth = 0), sample the complete
-// hemisphere if they hit a diffuse surface or bounce off specular surfaces perfectly
-vec3d radiance(const Ray& r) {
-  int closestId = -1;
-  double closestT = Infty;
-  findIntersection(r, &closestId, &closestT);
-  if (closestId < 0) return vec3d();  // no hit
-  vec3d hitPos = r.o + (r.d * closestT);
-  if (hitPos.y > 81.7) return vec3d();  // irrelevant hit above the room
-  const Sphere& hitObj = spheres[closestId];
-  vec3d hitNorm = (hitPos - hitObj.pos).norm();
-  // Handle specular surfaces, let the ray bounce off the surface perfectly
-  if (hitObj.refl_t == SPEC) {
-    vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
-    return hitObj.emission + (hitObj.color *
-           radiance(Ray(hitPos + (reflectedDir * reflRayOffset), reflectedDir)));
-  }
-  // Handle diffuse surfaces, sample the complete hemisphere at hitPos
-  vec3d result;
-  for (int i = 0; i < numSamplesPerPixel; ++i) {
-    vec3d sample = cosineSampleHemisphere(hitNorm);
-    result = result + hitObj.emission + (hitObj.color *
-             radiance(Ray(hitPos + (sample * reflRayOffset), sample), 1));
-  }
-  // Only divide by number of samples. Dividing by our PDF cos(theta)/pi
-  // canceled out Lambert's Cosine Law earlier and left us with multiplying all
-  // samples by pi. Including the energy conservation constraint 1/pi canceled
-  // out that pi as well so there's only this operation left to do.
-  return result * (1.0 / numSamplesPerPixel);
 }
 
 int main(int argc, char* argv[])
@@ -157,10 +127,27 @@ int main(int argc, char* argv[])
   #pragma omp parallel for schedule(dynamic, 1)
   for (int row = 0; row < h; ++row) {
     for (int col = 0; col < w; ++col) {
-      vec3d d = cx * ((double)col/w - 0.5) + cy * ((double)row/h - 0.5) + cam.d;
-      Ray r(cam.o, d.norm());
-      int i = (h - row - 1) * w + col;
-      pixels[i] = radiance(r);
+      int i = (h - row - 1) * w + col;              // pixel index in the image
+      for (int sy=0; sy<2; ++sy) {                  // 2x2 subpixel rows
+        for (int sx=0; sx<2; ++sx) {                // 2x2 subpixel columns
+          for (int s=0; s < numSamplesPerPixel / 4; ++s) {
+            // Apply importance sampling with a tent distribution, i.e. more samples
+            // will be closer to the center of the subpixel, less samples closer to edges
+            double r1=2*distribution(generator), dx=r1<1 ? sqrt(r1)-1: 1-sqrt(2-r1);
+            double r2=2*distribution(generator), dy=r2<1 ? sqrt(r2)-1: 1-sqrt(2-r2);
+            vec3d d = cx*( ( (sx+0.5 + dx)/2 + col)/w - 0.5) +
+                      cy*( ( (sy+0.5 + dy)/2 + row)/h - 0.5) +
+                      cam.d;
+            Ray r(cam.o, d.norm());
+            pixels[i] = pixels[i] + radiance(r);
+          }
+        }
+      }
+      // Only divide by number of samples. Dividing by our PDF cos(theta)/pi
+      // canceled out Lambert's Cosine Law earlier and left us with multiplying all
+      // samples by pi. Including the energy conservation constraint 1/pi canceled
+      // out that pi as well so there's only this operation left to do.
+      pixels[i] = pixels[i] * (1.0 / numSamplesPerPixel);
     }
   }
   writeImage(pixels, w, h);
