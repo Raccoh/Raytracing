@@ -26,6 +26,7 @@ int numSpheres = sizeof(spheres) / sizeof(Sphere);
 
 int numSamplesPerPixel = 4;  // if 4, try to read it from command line argument
 int maxDepth = 5;
+double reflRayOffset = 0.01; // add a bias to refl. rays to avoid false self illumination
 
 std::default_random_engine generator;
 std::uniform_real_distribution<double> distribution(0, 1);
@@ -85,7 +86,7 @@ vec3d radiance(const Ray& r, int depth) {
     // Trace one new random sample ray in the hemisphere at hitPos
     vec3d sample = cosineSampleHemisphere(hitNorm);
     vec3d result = hitObj.emission + (hitObj.color *
-                   radiance(Ray(hitPos + (sample * 0.1), sample), depth));
+                   radiance(Ray(hitPos + (sample * reflRayOffset), sample), depth));
     // Our PDF is now cos(theta)/pi with the cosine-weighted hemisphere.
     // Dividing by that cancels out Lambert's Cosine Law and we just need to
     // multiply all samples by pi. Including the energy conservation constraint
@@ -95,7 +96,7 @@ vec3d radiance(const Ray& r, int depth) {
   // Handle specular surfaces, let the ray bounce off the surface perfectly
   vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
   return hitObj.emission + (hitObj.color *
-         radiance(Ray(hitPos + (reflectedDir * 0.1), reflectedDir), depth));
+         radiance(Ray(hitPos + (reflectedDir * reflRayOffset), reflectedDir), depth));
 }
 
 // Compute transmitted radiance of initial rays (depth = 0), sample the complete
@@ -113,14 +114,14 @@ vec3d radiance(const Ray& r) {
   if (hitObj.refl_t == SPEC) {
     vec3d reflectedDir = r.d - (hitNorm * 2 * hitNorm.dot(r.d));
     return hitObj.emission + (hitObj.color *
-           radiance(Ray(hitPos + (reflectedDir * 0.1), reflectedDir)));
+           radiance(Ray(hitPos + (reflectedDir * reflRayOffset), reflectedDir)));
   }
   // Handle diffuse surfaces, sample the complete hemisphere at hitPos
   vec3d result;
   for (int i = 0; i < numSamplesPerPixel; ++i) {
     vec3d sample = cosineSampleHemisphere(hitNorm);
     result = result + hitObj.emission + (hitObj.color *
-             radiance(Ray(hitPos + (sample * 0.1), sample), 1));
+             radiance(Ray(hitPos + (sample * reflRayOffset), sample), 1));
   }
   // Only divide by number of samples. Dividing by our PDF cos(theta)/pi
   // canceled out Lambert's Cosine Law earlier and left us with multiplying all
