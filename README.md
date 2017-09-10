@@ -1,14 +1,18 @@
 # Raytracing
 
-An attempt to implement modern raytracing techniques.
+An attempt to implement relevant raytracing techniques.
 
 ### Disclaimer
 
-I do not claim ownership of any content in this project. Its sole purpose is replicating and learning modern raytracing techniques. There are parts that were simply copy-pasted from elsewhere for convenience.
+I do not claim ownership of any content in this project. Its sole purpose is replicating and learning relevant raytracing techniques. There are parts that were simply copy-pasted from elsewhere for convenience.
 
-Most importantly, I was inspired by Kevin Beason's [smallpt](http://www.kevinbeason.com/smallpt/).
+Most importantly, I was inspired by Kevin Beason's [smallpt](http://www.kevinbeason.com/smallpt/) which bundles together many relevant raytracing techniques in an impressive 99 lines of C++ code. In this project here, I basically replicated [smallpt](http://www.kevinbeason.com/smallpt/) step by step in my own way of coding by closely analyzing [smallpt](http://www.kevinbeason.com/smallpt/) and with other sources all listed below.
 
 #### Techniques learned and replicated
+
+Anti-Aliasing via Supersampling with Importance-Sampled Tent Distribution, from [smallpt](http://www.kevinbeason.com/smallpt/) and the [presentation slides about smallpt](https://drive.google.com/file/d/0B8g97JkuSSBwUENiWTJXeGtTOHFmSm51UC01YWtCZw/view) by David Cline
+
+Russian Roulette, from [this answer](https://computergraphics.stackexchange.com/a/2325) and [smallpt](http://www.kevinbeason.com/smallpt/)
 
 Importance Sampling of a Cosine-Weighted Hemisphere, from [rorydriscoll.com](http://www.rorydriscoll.com/2009/01/07/better-sampling/)
 
@@ -23,6 +27,24 @@ Phong Shading, known from my studies in advance
 Ray-Sphere Intersection, from [scratchapixel.com](https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection)
 
 #### History
+
+##### 10.09.17 - [7497bdf](https://github.com/Raccok/Raytracing/commit/7497bdfc3c853f19063a6223b7bf1dd5a790f9bf)
+
+Added supersampling as done in [smallpt](http://www.kevinbeason.com/smallpt/) as an anti-aliasing technique. This significantly improved the image quality by smoothing all edges. Note that I also added a black front side to the room in this step (as done in [smallpt](http://www.kevinbeason.com/smallpt/)) which basically limits/decreases the room depth, but this is a minor detail.
+
+| without supersampling | with supersampling |
+| --- | --- |
+| <img src="images/status_17_09_08.png" width="427" height="320"/> | <img src="images/status_17_09_10.png" width="427" height="320"/> |
+
+##### 08.09.17 - [373ce2e](https://github.com/Raccok/Raytracing/commit/373ce2efb3bab9fc36a0c3159aa2e473f44d7df9)
+
+Added Russian Roulette to randomly terminate a traced path. This makes the Monte Carlo integration (mathematically) unbiased ([source](https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer)). Ultimately, this technique allows a raytracer to include more (meaningful) radiance contributions in a traced path without much extra computational costs. Achieved improvements are shown below.
+
+| fixed path termination after 5 bounces | random path termination with Russian Roulette |
+| --- | --- |
+| <img src="images/status_17_09_02_5000s_imp.png" width="427" height="320"/> | <img src="images/status_17_09_08.png" width="427" height="320"/> |
+
+The differences are subtle but important nonetheless. In a close side by side comparison, you can see that the shadows are generally a bit brighter with Russian Roulette, because of the increased number of radiance contributions in each traced path. Also, for the same reason, the shadows below the balls received more reflected radiance from nearby surfaces and the surfaces' respective color is more visible at these areas.
 
 ##### 02.09.17 - [c68371c](https://github.com/Raccok/Raytracing/commit/c68371c64de21c6c3c7bb046d9ab350c5c9aaeeb)
 
