@@ -95,7 +95,7 @@ vec3d radiance(const Ray& r, int depth = 0) {
   }
   // Handle diffuse surfaces
   if (hitObj.refl_t == DIFF) {
-    // Trace one new random sample ray in the hemisphere at hitPos
+    // Trace one new random sample ray in the cosine-weighted hemisphere at hitPos
     vec3d sample = cosineSampleHemisphere(hitNorm);
     vec3d result = hitObj.emission + (reflCol *
                    radiance(Ray(hitPos + (sample * reflRayOffset), sample), depth));
@@ -121,6 +121,7 @@ int main(int argc, char* argv[])
     printf("Usage: ./Main <number of samples per pixel, at least 4>\n");
     return 1;
   }
+  int numSamplesPerSubpixel = numSamplesPerPixel / 4;
   Ray cam(vec3d(50, 52, 295.6), vec3d(0, -0.042612, -1).norm());
   vec3d cx = vec3d(w*.5135/h, 0, 0), cy = (cx.cross(cam.d)).norm()*.5135;
   vec3d* pixels = new vec3d[w * h];
@@ -130,7 +131,8 @@ int main(int argc, char* argv[])
       int i = (h - row - 1) * w + col;              // pixel index in the image
       for (int sy=0; sy<2; ++sy) {                  // 2x2 subpixel rows
         for (int sx=0; sx<2; ++sx) {                // 2x2 subpixel columns
-          for (int s=0; s < numSamplesPerPixel / 4; ++s) {
+          vec3d result;
+          for (int s=0; s < numSamplesPerSubpixel; ++s) {
             // Apply importance sampling with a tent distribution, i.e. more samples
             // will be closer to the center of the subpixel, less samples closer to edges
             double r1=2*distribution(generator), dx=r1<1 ? sqrt(r1)-1: 1-sqrt(2-r1);
@@ -139,15 +141,19 @@ int main(int argc, char* argv[])
                       cy*( ( (sy+0.5 + dy)/2 + row)/h - 0.5) +
                       cam.d;
             Ray r(cam.o, d.norm());
-            pixels[i] = pixels[i] + radiance(r);
+            result = result + radiance(r);
           }
+          // Divide by number of samples, clamp and divide by number of
+          // subpixels so all subpixels together form the end result.
+          // Dividing by our PDF cos(theta)/pi canceled out Lambert's Cosine Law
+          // earlier and left us with multiplying all samples by pi. Including
+          // the energy conservation constraint 1/pi canceled out that pi as
+          // well so there's only these operations left to do.
+          result = result * (1.0 / numSamplesPerSubpixel);
+          pixels[i] = pixels[i] + (vec3d(clamp(result.x), clamp(result.y), clamp(result.z)) *
+                      (1.0 / 4));
         }
       }
-      // Only divide by number of samples. Dividing by our PDF cos(theta)/pi
-      // canceled out Lambert's Cosine Law earlier and left us with multiplying all
-      // samples by pi. Including the energy conservation constraint 1/pi canceled
-      // out that pi as well so there's only this operation left to do.
-      pixels[i] = pixels[i] * (1.0 / numSamplesPerPixel);
     }
   }
   writeImage(pixels, w, h);
