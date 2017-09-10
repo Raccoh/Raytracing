@@ -11,11 +11,13 @@ Sphere spheres[] = {
          vec3d(.25,.25,.75), DIFF),                       // Right
   Sphere(1e5, vec3d(50,40.8,-1e5),      vec3d(),
          vec3d(.75,.75,.75), DIFF),                       // Back
-  Sphere(1e5, vec3d(50,-1e5, 81.6),     vec3d(),
+  Sphere(1e5, vec3d(50,40.8, 1e5+170),  vec3d(),
+         vec3d(),            DIFF),                       // Front
+  Sphere(1e5, vec3d(50,-1e5,81.6),      vec3d(),
          vec3d(.75,.75,.75), DIFF),                       // Bottom
   Sphere(1e5, vec3d(50, 1e5+81.6,81.6), vec3d(),
          vec3d(.75,.75,.75), DIFF),                       // Top
-  Sphere(16.5,vec3d(27, 16.5, 47),      vec3d(),
+  Sphere(16.5,vec3d(27,16.5,47),        vec3d(),
          vec3d(1.0,1.0,1.0)*0.999, SPEC),                 // Mirror ball
   Sphere(16.5,vec3d(73,16.5,78),        vec3d(),
          vec3d(0.0,1.0,0.0)*0.999, SPEC),                 // Green mirror ball
@@ -140,7 +142,8 @@ int main(int argc, char* argv[])
             vec3d d = cx*( ( (sx+0.5 + dx)/2 + col)/w - 0.5) +
                       cy*( ( (sy+0.5 + dy)/2 + row)/h - 0.5) +
                       cam.d;
-            Ray r(cam.o, d.norm());
+            // Push rays forward to start in interior
+            Ray r(cam.o + (d * 140), d.norm());
             result = result + radiance(r);
           }
           // Divide by number of samples, clamp and divide by number of
