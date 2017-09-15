@@ -28,7 +28,7 @@ Ray-Sphere Intersection, from [scratchapixel.com](https://www.scratchapixel.com/
 
 #### History
 
-##### 10.09.17 - [7497bdf](https://github.com/Raccok/Raytracing/commit/7497bdfc3c853f19063a6223b7bf1dd5a790f9bf)
+##### 10.09.17 - [diff](https://github.com/Raccok/Raytracing/compare/373ce2e...7497bdf)
 
 Added supersampling as done in [smallpt](http://www.kevinbeason.com/smallpt/) as an anti-aliasing technique. This significantly improved the image quality by smoothing all edges. Note that I also added a black front side to the room in this step (as done in [smallpt](http://www.kevinbeason.com/smallpt/)) which basically limits/decreases the room depth, but this is a minor detail.
 
@@ -36,7 +36,7 @@ Added supersampling as done in [smallpt](http://www.kevinbeason.com/smallpt/) as
 | --- | --- |
 | <img src="images/status_17_09_08.png" width="427" height="320"/> | <img src="images/status_17_09_10.png" width="427" height="320"/> |
 
-##### 08.09.17 - [373ce2e](https://github.com/Raccok/Raytracing/commit/373ce2efb3bab9fc36a0c3159aa2e473f44d7df9)
+##### 08.09.17 - [diff](https://github.com/Raccok/Raytracing/compare/6aa428e...373ce2e)
 
 Added Russian Roulette to randomly terminate a traced path. This makes the Monte Carlo integration (mathematically) unbiased ([source](https://computergraphics.stackexchange.com/questions/2316/is-russian-roulette-really-the-answer)). Ultimately, this technique allows a raytracer to include more (meaningful) radiance contributions in a traced path without much extra computational costs. Achieved improvements are shown below.
 
@@ -46,7 +46,7 @@ Added Russian Roulette to randomly terminate a traced path. This makes the Monte
 
 The differences are subtle but important nonetheless. In a close side by side comparison, you can see that the shadows are generally a bit brighter with Russian Roulette, because of the increased number of radiance contributions in each traced path. Also, for the same reason, the shadows below the balls received more reflected radiance from nearby surfaces and the surfaces' respective color is more visible at these areas.
 
-##### 02.09.17 - [c68371c](https://github.com/Raccok/Raytracing/commit/c68371c64de21c6c3c7bb046d9ab350c5c9aaeeb)
+##### 02.09.17 - [diff](https://github.com/Raccok/Raytracing/compare/3af958f...c68371c)
 
 Added the gamma correction of 2.2 from [smallpt](http://www.kevinbeason.com/smallpt/). Finally, my images are as bright as [smallpt](http://www.kevinbeason.com/smallpt/)'s, I've been wondering why they weren't.
 
@@ -60,19 +60,19 @@ Added importance sampling with a cosine-weighted hemisphere. This is a pretty bi
 
 Importance sampling achieves significantly less noise with the same number of samples. Also, 5000 samples per pixel with importance sampling generate an image similar to, or even better than, 10000 samples per pixel with uniform sampling in terms of visual quality. Ultimately, it saves half the computation time in this case.
 
-##### 01.09.17 - [5a9d338](https://github.com/Raccok/Raytracing/commit/5a9d338094ff9647784379e12eb7bc9f98e4588b)
+##### 01.09.17 - [diff](https://github.com/Raccok/Raytracing/compare/37e5abc...5a9d338)
 
 After quite a lot of experimenting and analyzing the implementations of [smallpt](http://www.kevinbeason.com/smallpt/) and [scratchapixel.com](https://www.scratchapixel.com/lessons/3d-basic-rendering/global-illumination-path-tracing/global-illumination-path-tracing-practical-implementation), I feel confident in understanding the practice of Monte Carlo path tracing. Multiple ray bounces allow for indirect lighting and adding explicit direct or ambient lighting is no longer necessary. Also, they make rendering ideal specular surfaces pretty simple. The image below was again rendered with 10000 samples per pixel and each sample ray bounced 5 times after it hit a diffuse surface for the first time. As expected, rendering this image was about 5 times slower than rendering the image before, since the runtime is pretty much linear in the number of ray bounces.
 
 <img src="images/status_17_09_01.png" width="512" height="384"/>
 
-##### 22.08.17 - [eb84f2d](https://github.com/Raccoh/Raytracing/commit/eb84f2d8f7b343c95868c33bb0eca853502302b6)
+##### 22.08.17 - [diff](https://github.com/Raccok/Raytracing/compare/891110b...eb84f2d)
 
 Managed to render the [smallpt](http://www.kevinbeason.com/smallpt/) scene with an area light source. This setup uses very basic Monte Carlo path tracing where the rays only bounce once. Still, it generates soft shadows visible on the floor in the image below which was rendered with 10000 samples per pixel.
 
 <img src="images/status_17_08_22.png" width="512" height="384"/>
 
-##### 20.08.17 - [891110b](https://github.com/Raccoh/Raytracing/commit/891110b02f9926885299386a17b7afb66754d785)
+##### 20.08.17 - [diff](https://github.com/Raccok/Raytracing/compare/2339c70...891110b)
 
 Managed to render the [smallpt](http://www.kevinbeason.com/smallpt/) scene with a point light source (instead of an area light source) and diffuse lighting plus hard shadows as a start. Most of this practice was known from my studies in advance.
 
